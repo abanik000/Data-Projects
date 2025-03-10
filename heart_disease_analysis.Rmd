@@ -1,0 +1,256 @@
+---
+title: "Assignment2"
+author: "Arpa Banik"
+date: "2024-10-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tinytex)
+knitr::opts_chunk$set(echo = FALSE)
+library(ggplot2)
+library(dplyr)
+library(ggpubr)
+```
+
+
+```{r}
+heart_data <- read.csv("~/Library/CloudStorage/OneDrive-BentleyUniversity/MA 250/Cleaned_HeartDiseaseTrain-Test.csv")
+head(heart_data,5)
+```
+<span style="font-size:18px">**Dataset Description**</span>
+
+I chose this dataset because heart disease has personally affected my family, and understanding the factors that contribute to it is important to me. The dataset contains information on 1,025 patients, with 14 attributes related to heart health, including age, sex, chest pain type, cholesterol, and blood pressure. Given my family history, I'm particularly interested in exploring how these factors relate to heart disease outcomes and what insights they might offer for prevention.
+
+<span style="font-size:18px">**Initial Research Questions:**</span>
+
+1.	How do age and sex influence the likelihood of heart disease?
+2.	Are there significant relationships between cholesterol levels and heart disease presence?
+3.	Does the type of chest pain (e.g., typical angina) correlate with the occurrence of heart disease?
+
+<span style="font-size:14px">**Data distribution of Age, Cholesterol, and Blood Pressure:**</span>
+
+```{r}
+# Distribution for age
+ggplot(heart_data, aes(x=age)) + 
+  geom_histogram(binwidth=5, fill="lightblue", color="black") +
+  labs(title="Age Distribution", x="Age", y="Count",caption = "The highest concentration of individuals between 50 and 60 years old.") +
+  theme_minimal()
+```
+
+This histogram shows the distribution of ages in the dataset, with the highest concentration of individuals between 50 and 60 years old.
+
+```{r}
+# Distribution for cholesterol
+ggplot(heart_data, aes(x=cholestoral)) + 
+  geom_histogram(binwidth=20, fill="lightgreen", color="black") +
+  labs(title="Cholesterol Distribution", x="Cholesterol (mg/dl)", y="Count",caption = "The majority of individuals have cholesterol levels between 200 and 300 mg/dL") +
+  theme_minimal()
+```
+
+This histogram displays the distribution of cholesterol levels, showing the majority of individuals having cholesterol levels between 200 and 300 mg/dL.
+
+```{r}
+# Distribution for resting blood pressure
+ggplot(heart_data, aes(x=resting_blood_pressure)) + 
+  geom_histogram(binwidth=10, fill="lightcoral", color="black") +
+  labs(title="Resting Blood Pressure Distribution", x="Blood Pressure (mm Hg)", y="Count",caption = "Most individuals have a blood pressure between 120 and 140 mm Hg") +
+  theme_minimal()
+```
+
+The distribution of resting blood pressure among individuals, where most individuals have a blood pressure between 120 and 140 mm Hg.
+
+**Categorical Variables: Chest Pain Type and Exercise-Induced Angina**
+```{r}
+ggplot(heart_data, aes(x=chest_pain_type)) +
+  geom_bar(fill="lightblue", color="black") +
+  labs(title="Chest Pain Type Distribution", x="Chest Pain Type", y="Count") +
+  theme_minimal()
+```
+
+This bar chart presents the distribution of different chest pain types, with typical angina being the most common type.
+
+```{r}
+ggplot(heart_data, aes(x=exercise_induced_angina)) +
+  geom_bar(fill="lightgreen", color="black") +
+  labs(title="Exercise-Induced Angina", x="Angina (Yes/No)", y="Count") +
+  theme_minimal()
+```
+
+This bar chart shows the count of individuals who experience exercise-induced angina compared to those who do not, with the majority not experiencing it.
+
+**Pairwise Plots (Scatter Plots) for Relationships**
+```{r}
+ggplot(heart_data, aes(x=age, y=Max_heart_rate, color=as.factor(target))) +
+  geom_point() +
+  labs(title="Age vs Max Heart Rate by Heart Disease Status", x="Age", y="Max Heart Rate") +
+  theme_minimal()
+```
+
+This scatter plot shows the relationship between age and maximum heart rate for individuals with and without heart disease, with those without heart disease generally having higher maximum heart rates.
+
+```{r}
+ggplot(heart_data, aes(x=cholestoral, y=resting_blood_pressure, color=as.factor(target))) +
+  geom_point() +
+  labs(title="Cholesterol vs Resting Blood Pressure by Heart Disease Status", x="Cholesterol", y="Resting Blood Pressure") +
+  theme_minimal()
+```
+
+This scatter plot  compares cholesterol levels and resting blood pressure for individuals with and without heart disease, indicating no clear clustering pattern based on heart disease status.
+
+**Sanity Checks**
+
+```{r}
+ggplot(heart_data, aes(x=sex, fill=as.factor(target))) +
+  geom_bar(position="fill") +
+  labs(title="Proportion of Heart Disease by Gender", x="Sex", y="Proportion", fill="Heart Disease") +
+  theme_minimal()
+```
+
+This stacked bar chart shows the proportion of heart disease in males and females, with males having a higher proportion of heart disease compared to females.
+
+**1a) Age Distribution by Heart Disease Status and Sex**
+```{r}
+ggplot(heart_data, aes(x=age, fill=as.factor(target))) +
+  geom_histogram(binwidth=5, position="dodge", alpha=0.7) +
+  facet_wrap(~sex) +
+  labs(title="Age Distribution by Heart Disease Status and Sex", 
+       x="Age", y="Count", fill="Heart Disease") +
+  theme_minimal()
+```
+
+This histogram breaks down age distribution by heart disease status (0 for no heart disease, 1 for heart disease) and sex (female vs. male). It shows that heart disease is more common in males, particularly between the ages of 50-70, where a clear higher count of heart disease cases is evident compared to females. For females, heart disease cases seem more evenly distributed across age groups, though still peaking around the 60-70 age range. This highlights how age and sex interplay with the prevalence of heart disease.
+
+**1b) Boxplot of Age by Heart Disease and Sex**
+
+```{r}
+ggplot(heart_data, aes(x=sex, y=age, fill=as.factor(target))) +
+  geom_boxplot() +
+  labs(title="Boxplot of Age by Heart Disease Status and Sex", 
+       x="Sex", y="Age", fill="Heart Disease") +
+  theme_minimal()
+```
+
+This boxplot compares the age range distributions for heart disease and non-heart disease groups by sex. It highlights the variability in ages of heart disease patients across sexes. For males, heart disease appears to occur over a wider age range, while for females, heart disease cases seem more concentrated in the older age groups. The boxplot emphasizes the difference in age distribution and central tendencies, offering a clearer picture of how the median age for heart disease differs between men and women.
+
+**1c) Stacked Bar Chart of Heart Disease by Sex and Age Group**
+
+```{r}
+heart_data$age_group <- cut(heart_data$age, breaks=c(20, 40, 50, 60, 70, 80), 
+                            labels=c("20-40", "40-50", "50-60", "60-70", "70-80"))
+
+ggplot(heart_data, aes(x=age_group, fill=as.factor(target))) +
+  geom_bar(position="fill") +
+  facet_wrap(~sex) +
+  labs(title="Proportion of Heart Disease by Age Group and Sex", 
+       x="Age Group", y="Proportion", fill="Heart Disease") +
+  theme_minimal()
+
+```
+
+A stacked bar chart showing the proportion of heart disease in different age groups by sex.
+
+This chart directly visualizes the likelihood of heart disease within each age group by sex. It shows that for females, heart disease becomes prominent after age 50, with the proportion increasing. For males, the probability of heart disease is relatively high across age groups but especially between 50-60 and 60-70. This helps quantify the proportion of individuals affected by heart disease in each demographic.
+ 
+**1d) Logistic Regression Plot:**
+Logistic regression to visualize how age and sex influence the likelihood of heart disease.
+
+```{r}
+model <- glm(target ~ age + sex, data=heart_data, family=binomial)
+
+heart_data$predicted_risk <- predict(model, type="response")
+
+ggplot(heart_data, aes(x=age, y=predicted_risk, color=sex)) +
+  geom_line() +
+  labs(title="Predicted Risk of Heart Disease by Age and Sex", 
+       x="Age", y="Predicted Risk") +
+  theme_minimal()
+
+```
+
+This line graph plots the predicted risk of heart disease by age for both males and females. It visually communicates that the risk of heart disease increases with age for both sexes, but females have a consistently higher predicted risk across all age groups. The trend shows a steeper decline for males, indicating they may reach higher risk levels earlier but also stabilize more quickly. This provides new information on how age and sex together influence the progression of heart disease risk.
+
+By comparing these graphs, we can see patterns like males having heart disease at younger ages in higher numbers, while females generally develop it later but at a higher risk. 
+
+**2) Cholesterol Levels vs. Heart Disease Status:**
+
+```{r}
+ggplot(heart_data, aes(x=as.factor(target), y=cholestoral, fill=as.factor(target))) +
+  geom_boxplot() +
+  labs(title="Cholesterol Levels by Heart Disease Status", x="Heart Disease", y="Cholesterol Level") +
+  theme_minimal()
+```
+
+This visualization helps answer the research question by showing the relationship between cholesterol levels and heart disease presence. Even though median levels might not differ significantly, the spread and presence of outliers in the heart disease group suggest that cholesterol levels could play a role in specific cases of heart disease. It offers a nuanced perspective. Instead of a clear, direct correlation where people with heart disease always have higher cholesterol, it reveals that heart disease patients tend to have more variability in their cholesterol levels, including extreme high outliers. Cholesterol levels alone might not fully explain heart disease presence, but elevated cholesterol levels, particularly among outliers, may be a contributing factor in certain heart disease cases.
+
+
+**3) Chest Pain Type vs. Heart Disease:**
+Here I did a Chi-Square Test to check if there's an association between chest pain type (categorical) and the presence of heart disease.
+
+Hypothesis:
+H0: There is no association between chest pain type and heart disease.
+H1: There is an association between chest pain type and heart disease.
+
+```{r}
+table_chestpain <- table(heart_data$chest_pain_type, heart_data$target)
+
+chi_test <- chisq.test(table_chestpain)
+
+ggplot(heart_data, aes(x=chest_pain_type, fill=as.factor(target))) +
+  geom_bar(position="fill") +
+  labs(title="Chest Pain Type vs Heart Disease", 
+       x="Chest Pain Type", y="Proportion", fill="Heart Disease") +
+  annotate("text", x=2, y=1.05, label=paste("p-value:",chi_test$p.value), color="red", size=5) +
+  theme_minimal()
+```
+
+This stacked bar plot effectively demonstrates how certain types of chest pain are much more likely to be associated with heart disease than others. For instance, individuals with typical angina are much more likely to have heart disease, while those who are asymptomatic or experience non-anginal pain are less likely. The results of the chi-square test (p-value < 0.00001) suggest a significant association between chest pain type and heart disease. Specifically, individuals with certain types of chest pain, such as typical angina, are more likely to have heart disease. 
+
+**4) Resting Blood Pressure by Heart Disease Status:**
+T-Test: Resting Blood Pressure by Heart Disease Status
+We will compare the resting blood pressure of patients with and without heart disease using a t-test and then annotate the boxplot with the resulting p-value.
+
+Hypothesis:
+H0: There is no difference in resting blood pressure between patients with and without heart disease.
+H1: There is a significant difference in resting blood pressure between patients with and without heart disease.
+
+```{r}
+t_test_result <- t.test(resting_blood_pressure ~ target, data = heart_data)
+
+ggplot(heart_data, aes(x=as.factor(target), y=resting_blood_pressure, fill=as.factor(target))) +
+  geom_boxplot() +
+  labs(title="Resting Blood Pressure by Heart Disease Status", 
+       x="Heart Disease Status", y="Resting Blood Pressure (mm Hg)", fill="Heart Disease") +
+  annotate("text", x=1.5, y=max(heart_data$resting_blood_pressure), 
+           label=paste("p-value:", round(t_test_result$p.value, 5)), size=5, color="red") +
+  theme_minimal()
+```
+
+This boxplot compares resting blood pressure levels between individuals with and without heart disease. The t-test results (p-value < 0.05) indicate a statistically significant difference in blood pressure between the two groups. Patients with heart disease tend to have higher resting blood pressure, suggesting that elevated blood pressure is a risk factor for heart disease. It answers a new research question related to the relationship between resting blood pressure and heart disease. The small difference in the medians suggests that while there might not be a dramatic difference in resting blood pressure between those with and without heart disease, the p-value (1e-05) indicates that the relationship is statistically significant.
+
+**5) Resting Blood Pressure by Slope of Peak Exercise ST Segment:**
+We can perform a one-way ANOVA to compare the means of resting blood pressure across the different levels of slope of the peak exercise ST segment (Downsloping, Flat, Upsloping).
+
+Hypothesis:
+H0: There is no difference in resting blood pressure across different slope categories.
+H1: There is a significant difference in resting blood pressure between the slope categories.
+```{r}
+
+anova_test <- aov(resting_blood_pressure ~ slope, data=heart_data)
+
+summary(anova_test)
+
+ggplot(heart_data, aes(x=slope, y=resting_blood_pressure, fill=slope)) +
+  geom_boxplot() +
+  labs(title="Resting Blood Pressure by Slope of Peak Exercise ST Segment", 
+       x="Slope", y="Resting Blood Pressure (mm Hg)") +
+  annotate("text", x=2, y=max(heart_data$resting_blood_pressure), 
+           label=paste("p-value:", round(summary(anova_test)[[1]][["Pr(>F)"]][1], 5)), color="red", size=5) +
+  theme_minimal()
+
+```
+
+This boxplot compares resting blood pressure levels based on the slope of the peak exercise ST segment (a feature from electrocardiograms) across different groups (downslope, flat, and upslope). It explores the relationship between ST segment slope and resting blood pressure and shows a significant difference in resting blood pressure across different slope types, with a p-value of 0.00017 (p-value < 0.05), indicating that these slope types might relate to resting blood pressure and heart disease risk. This is exploring a more detailed medical indicator (ST segment slope) rather than the original broad variables like cholesterol or chest pain. It provides insights into a different research question regarding how electrocardiogram features relate to blood pressure and heart disease.
+
+<span style="font-size:18px">**Summary of Insights:**</span>
+From this analysis, I have learned several important insights about heart disease risk factors. Age and sex play a significant role, with men being more prone to heart disease at younger ages. Cholesterol and resting blood pressure levels were found to be significantly higher in individuals with heart disease, emphasizing their importance as risk factors. Additionally, chest pain type and the maximum heart rate achieved during exercise are strongly associated with heart disease, suggesting that these indicators are useful in predicting the presence of heart disease. These findings underscore the need for regular monitoring of cardiovascular health, particularly in at-risk populations. Additionally, factors like maximum heart rate and the ST segment slope provide further insights into the complex relationships between cardiovascular health and heart disease risk, helping me understand the broader range of factors that contribute to heart disease.

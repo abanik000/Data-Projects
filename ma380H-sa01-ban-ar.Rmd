@@ -1,0 +1,209 @@
+---
+title: "Short Assignment #1"
+subtitle: "Survival of Mice"
+author: "Arpa Banik"
+date: "**Due date: Februray 16 2025 at 11:59 PM EST**"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+#| include: false
+library(dplyr)
+library(tidyverse)
+library(patchwork)
+```
+
+## Task 0 (0 points)
+
+
+Read in the data set and set appropriate types for the variables.
+
+*****
+
+```{r}
+data <- read.csv("~/Library/CloudStorage/OneDrive-BentleyUniversity/MA 380/Assignments/ma380H-sa01-surviving-mice.csv")
+
+# structure of the data
+str(data)
+```
+
+
+```{r}
+data <- data %>%
+  mutate(
+    Dose = as.numeric(Dose),          
+    Survivors = as.integer(Survivors), 
+    Number = as.integer(Number)        
+  )
+
+summary(data)
+```
+
+
+## Task 1 (5 points)
+
+Fit and interpret a logistic regression model to the data with 
+systematic component `Survivors/Number ~ 1 + log(Dose)`.
+
+*****
+
+<Your answer should be here>
+```{r}
+# Create prop variable
+data$Prop <- data$Survivors / data$Number 
+
+# Create log Dose variable
+data$log_Dose <- log(data$Dose)
+
+# Fit logistic model
+fm <- glm(Prop ~ 1 + log_Dose, data = data,
+family = binomial(link="logit"), weights = Number)
+summary(fm)
+```
+The model to the data reveals the equation:
+logit(E[Prop]) = 11.24 + 1.71(log Dose)
+
+E[Prop] is the average predicted probability of success and log_Dose is the logarithmic value of the dosage of anti-pneumococcus serum.
+
+This means that when the predictor variable, log_Dose, is equal to 0, the probability of survival is estimated to be 99.99% (e^11.24/(1+e^11.24).This represents the baseline survival probability at this log-dose level. The coefficient 1.71 for log_Dose represents the change in the log-odds of survival for a unit increase in log_Dose. To interpret this in terms of odds, we take the exponential of 1.71 (e^1.71 ≈5.52). The coefficient 1.71 indicates that for a one-unit increase in log(Dose), the odds of survival multiply by e^1.71, which is about 5.53 times. This means that increasing the dose (on a logarithmic scale) significantly improves the chances of survival.
+
+```{r}
+# Create scatterplot with model
+p <- ggplot(data = data,
+mapping = aes(x = log_Dose, y = Prop)) +
+geom_point() +
+labs(x = "Dosage (in cc, log-scale)", y = "Proportion of Survival", title = "Dosage vs Proportion of Survival")
+p
+```
+
+## Task 2 (5 points)
+
+Examine the diagnostics from the above model and explain what 
+they tell us about the model.
+
+*****
+```{r}
+# Run diagnostics
+data <- data |>
+mutate(fm.eta = predict(fm, type = "link"),
+fm.mu = predict(fm, type = "response"),
+fm.rD = resid(fm, type = "deviance"),
+fm.wR = fm.eta + resid(fm, type = "working"))
+
+# Fitted values vs. deviance residuals
+p1 <- ggplot(data = data,
+mapping = aes(x = fm.mu,
+y = fm.rD)) + geom_point() + geom_line() +
+labs(x = "Fitted Values",
+y = "Deviance Residuals")
+
+# Fitted values vs. absolute value deviance residuals
+p2 <- ggplot(data = data,
+mapping = aes(x = fm.mu,
+y = abs(fm.rD))) + geom_point() + geom_line() +
+  labs(x = "Fitted Values",
+y = "|Deviance Residuals|")
+
+#Linear predictor vs working response
+p3 <- ggplot(data = data,
+mapping = aes(x = fm.eta, y = fm.wR)) + geom_point() + geom_line() +
+labs(x = "Linear Predictor", y = "Working Response")
+
+#Predictor variable vs deviance residuals
+p4 <- ggplot(data = data, mapping = aes(x = log_Dose,y = fm.rD)) + geom_point() + geom_line() +labs(x = "Dose (in cc, log-scale)", y = "Deviance Residuals")
+
+(p1 + p2)/(p3 + p4)
+```
+
+The diagnostic plots offer insights into the model’s fit and its adherence to key assumptions. Due to the limited number of data points, the plots are more susceptible to deviations. 
+
+The Deviance Residuals vs. Fitted Values plot highlights potential outliers in the model. While most points appear randomly distributed with no particular pattern, one prominent outlier at the top could influence the model's accuracy. 
+
+The Absolute Value of Deviance Residuals vs. Fitted Values plot examines the distribution of residuals across a range of fitted values. Ideally, the residuals would exhibit a consistent horizontal spread, but this pattern is not evident here. This suggests potential issues with the assumption of homoscedasticity, although the small dataset limits our ability to make definitive conclusions.
+
+The Working Response vs. Linear Predictor plot checks the linearity of the model. The relatively linear relationship in this plot supports the validity of this assumption, indicating that the model adequately captures the linear relationship.
+
+The Deviance Residuals vs. Predictor Variable (log-dose) plot is used to detect influential points. A high residual value on this plot suggests an outlier in the data, which may impact the model's predictive performance.
+
+Overall, the model fits the data reasonably well, though there are some concerns about homoscedasticity and the influence of an outlier.
+
+
+
+## Task 3 (5 points)
+
+Plot the data with the fitted lines, and the corresponding 95% 
+confidence intervals.
+
+*****
+```{r}
+# Make predictions
+tb <- tibble(log_Dose = seq(log(0.0005), log(0.015), length = 20))
+tb <- tb %>%
+mutate(fm.mu = predict(fm,
+                          newdata = tb,
+                          type = "response"))
+8
+# Plot fitted line
+q <- p + geom_line(data = tb,
+mapping = aes(x = log_Dose,
+              y = fm.mu),
+color = "blue")
+
+q
+```
+```{r}
+# Calculate confidence intervals
+tmp <- predict(fm,
+        newdata = tb,
+        type = "link",
+        se.fit = TRUE) 
+
+tb <- tb %>%
+ mutate(fm.eta = tmp[["fit"]],
+       fm.eta.se = tmp[["se.fit"]],
+       fm.eta.hi = fm.eta + 1.96*fm.eta.se,           fm.eta.lo = fm.eta - 1.96*fm.eta.se, 
+       fm.mu.hi = 1 / (1 +exp(-fm.eta.hi)),           fm.mu.lo = 1 / (1 + exp(-fm.eta.lo)))
+
+# Plot confidence interval
+r <- q + geom_line(data = tb,
+mapping = aes(x = log_Dose,
+y = fm.mu.hi), color = "hotpink") +
+geom_line(data = tb,
+
+mapping = aes(x = log_Dose,
+y = fm.mu.lo),
+color = "hotpink")
+
+r
+```
+## Task 4 (5 points)
+
+Estimate the ED50.
+*****
+
+The ED50 is calculated as the Dose value when the predicted probability is 0.5.
+
+Based on the fitted model above, this is estimated to be around a log_Dose value of -6.60, or a dosage value of 0.0014 cubic centimeters.
+
+Dose = e^−(β0/β1)
+
+```{r}
+# Calculate ED50
+ED50 <- exp(-(11.24 / 1.71)) 
+ED50
+```
+The dosage is equal to 0.0014 cubic centimeters when the predicted probability of survival is 0.5.
+
+
+## Task 5 (5 points)
+
+Interpret your fitted model.
+
+*****
+The fitted model captures the relationship between the dosage of anti-pneumococcus serum (on a log scale) and the probability of mice survival. This is achieved by generating predicted values from the fitted model and plotting them over the actual data to compare their alignment. In the first fitted plot, the blue line closely follows the actual data points, except for one outlier at a predictor value of -6, which was previously detected in the diagnostic plots.
+
+To further assess the fitted model’s validity, confidence intervals are calculated to account for uncertainty and potential deviation The narrow confidence interval in the second fitted plot suggests that the model is quite accurate. Additionally, the earlier-identified outlier still falls within the interval, reinforcing that the model effectively predicts the survival probabilities of mice. We can say the serum was highly effective since there were nearly 100% survival rates at higher doses.
+
+

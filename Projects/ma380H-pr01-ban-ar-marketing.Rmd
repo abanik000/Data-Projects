@@ -1,0 +1,862 @@
+---
+title: "MA 380H Project One"
+subtitle: "Marketing Analysis"
+author: "Arpa Banik"
+date: "**Due Date: Tuesday February 25, 2025, 11:59 PM EST**"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+#| include: false
+library(tidyverse)
+library(dplyr)
+library(patchwork)
+library(naniar)
+library(GGally)
+library(ggcorrplot)
+library(car)
+library(broom)
+library(statmod)  
+library(ggplot2)  
+library(gridExtra)
+```
+
+# Purpose
+
+This assignment has 12 tasks (numbered 0 to 11) worth a 
+total of 200 points. Each task shows the number of points
+attached to it.
+There are there key activities for the assignment:
+
+1. comprehensive analysis of a data set
+1. interpretation of key findings
+1. communication of analysis results to stakeholders
+
+During your career you will be involved in all three
+activities and this assignment's purpose is to introduce
+you and give the tools and experience to successfully
+navigate them.
+
+
+## Skills
+
+This assignment will help you practice the following 
+skills that are essential to your success in this course
+and in your professional life beyond school:
+
+1. Apply exploratory tools to determine which predictor
+   variables may help us determine the target variable
+1. Understand how different predictor variables are related
+   to each other and how they affect the prediction of the
+   target (aka response) variable
+1. Use statistical software to fit a model to the data
+1. Employ diagnostic tools to improve a statistical model
+1. Interpret the parameters of a statistical model and 
+   communicate your findings
+1. Use RStudio and R Notebook to author a document that
+   integrates code and prose into single text file. 
+   This approach goes a long way to ensuring the
+   reproducibility of your findings.
+
+## Knowledge
+
+This assignment will also help you to become familiar with 
+the following important content knowledge in this discipline:
+
+1. Continuous models within the Generalized Linear Modeling 
+   Framework
+1. Apply feature engineering techniques to predictor variables
+   to extract more information
+1. Use various residuals to evaluate and improve a statistical
+   model
+
+
+# Criteria for Success
+
+A successful project will produce an R Notebook that is clear,
+concise, and informative.
+Each task will be graded on the quality of your thought process,
+conclusions, and its presentation as documented in 
+your written response.
+AnsIrs to individual tasks can use technical language, but
+the ansIr to the last task, where you need to summarize your
+your findings for your stakeholders, should be focused for a
+business audience and thus not use technical language.
+
+It is very easy to produce lots of computer output such as
+tables or graphs.
+Following this voluminous strategy is a recipe for failure. 
+You should **look at everything** but include the most relevant
+pieces and explain why some other items may not be relevant.
+Also producing output and not explaining it in plain English
+will diminish the impact of your work.
+
+Each spelling error or misused word, at best says you are careless, and at 
+worst diminishes the credibility of your work.
+After a few such errors, your readers may give up and
+and move on to other activities.
+I will skip over the first three spelling mistakes (or misused
+words), but thereafter, each misspelling or misused word will
+deduct $10(K - 3)$ points from your overall score, where $K$
+is the number of such errors.
+
+Do not worry about about formatting issues, such as page 
+breaks, heading sizes, and similar items.
+But do worry about the graphs you are producing for this 
+report.
+Make sure that your labels are correct and informative.
+
+Recommendations are stated in unambiguous language. The
+writing style should be direct and it should not narrate 
+the steps you are taking. 
+Rather you should focus on conveying the main facts and selections 
+used.
+
+
+# What to Submit
+
+You should **only** upload your R Notebook into Brightspace.
+Please use the following naming convention for your
+file:
+`ma380-pr01-<lst name>-<fst name>.Rmd`
+where `<lst name>` represents the first **three**
+letters of your last name and `<fst name>` corresponds
+to the first **two** letters of your first name.
+For example, my submission file should be named:
+`ma380-pr01-sch-er.Rmd`.
+
+Your submission file should have your name as the author
+of the document.
+If you do not provide your name or your file name does 
+not follow the above rule, 
+**your submission will receive zero points**.
+
+I will knit your submission into a Word or PDF file and provide
+feedback on that document.
+It is important that your R Notebook is error free.
+If I cannot knit your submission, then I will return it to you
+to fix and deduct 10 points from your overall score.
+I highly recommend that you knit your document to either
+HTML or Word and take a close look at the final rendered
+document to make sure that is what you want to submit.
+
+
+# Business Problem
+
+You have been hired at **Artemis LLC** as a data analyst and 
+your manager would like you to assist the marketing department.
+They have collected data on a completed marketing campaign for
+a particular product.
+The campaign consisted in calling prospective customers to see
+if they would buy the product.
+For each call a variety of data elements Ire collected,
+including whether the prospect purchased the product.
+They would like you to advise them on future campaigns so that
+their efforts will be most productive in terms of purchases.
+
+Your task is to use the available data (data dictionary is 
+provided below) to construct a generalized linear model that
+will generate insights into the productivity of marketing calls
+for the same product.
+Your model will not be used to predict the outcome of future calls.
+Instead, the marketing department wants your advice regarding 
+possible adjustments they can incorporate into future efforts.
+
+
+## Data Dictionary
+
+| Variable   | Description                                         |
+|:-----------|:----------------------------------------------------|
+| purchase   | Indicator for purchase                              |
+| age        | Age of the prospective customer                     |
+| edu_years  | Years of education                                  |
+| marital    | Marital status                                      |
+| job        | Occupation category                                 |
+| housing    | Indicates whether the prospect has a housing loan   |
+| loan       | Indicates whether the prospect has a cosumer loan   |
+| month      | The month of the marketing call                     |
+| Iekday    | The day of the Iek of the marketing call           |
+| phone      | Type of phone the prospect uses                     |
+| CPI        | Consumer price index, at time of call               |
+| CCI        | Consumer confidence index, at time of call          |
+| irate      | Short term interest rate, at time of call           |
+| employment | Number of employees at the company, at time of call |
+
+*****
+
+
+## Task 0 (0 points)
+
+Read the data and provide appropriate types to the
+variables in the data set.
+Note that in later tasks you may need to modify the
+variable types given here.
+Use the function `read_csv()` from the `tidyverse` package
+and set the argument `col_types` appropriately.
+
+*****
+
+```{r}
+# Load the dataset
+df <- read_csv("ma380H-pr01-marketing.csv", col_types = "ifffffffddddi")
+df
+```
+
+*****
+
+## Task 1 (20 points)
+
+Conduct an exploratory data analysis (EDA).
+Be sure to mention what each variable may (or may not)
+contribute to your later modeling.
+
+As you perform EDA, keep the following points in mind:
+
+1. Any missing information?
+1. Any suspicious entries?
+1. Does data match description for the variable?
+1. What is the relationship betIen a predictor variable
+   and the target variable?
+
+
+*****
+```{r}
+summary(df)
+df <- df %>% 
+  mutate(
+    purchase = as.factor(purchase),
+    marital = as.factor(marital),
+    job = as.factor(job),
+    housing = as.factor(housing),
+    loan = as.factor(loan),
+    month = factor(month, levels = unique(month)),
+    weekday = factor(weekday, levels = unique(weekday))
+  )
+```
+
+```{r}
+# Check for missing values
+missing_values <- df %>% summarise_all(~sum(is.na(.)))
+missing_values
+
+# Visualizing missing data
+vis_miss(df)
+```
+
+Age: Shows a slightly right-skewed distribution. It could be useful if younger or older customers exhibit different purchasing behaviors.
+
+Education Years (edu_years): Ranges from 1 to 16, with most customers having at least a high school education. It may impact purchase likelihood if higher education linearly correlates with financial stability or product interest.
+
+Job: Includes various categories, but missing values exist. Certain occupations may influence purchasing behavior based on income or lifestyle.
+
+Marital Status: Could affect purchase decisions if family structure influences financial priorities, but missing values may reduce predictive power.
+
+Housing: Indicates home ownership status (yes, no, unknown). May correlate with financial stability and purchasing ability.
+
+Loan: Binary variable (yes/no). Could be a strong predictor if loan holders are less likely to make purchases.
+
+Phone Type: Most calls occurred in May, as indicated in the summary statistics and visualizations, suggesting seasonality in marketing campaigns. Cellular users appear to have higher purchase rates than landline users, making this a significant variable.
+
+Month & Weekday: Most calls occurred in May, indicating seasonality. If purchases vary by month or day, these variables could help capture trends.
+
+Consumer Price Index (CPI): Has very small variance, making it less useful in the model.
+
+Consumer Confidence Index (CCI): Low variance but could contribute if consumer sentiment impacts purchasing behavior.
+
+Interest Rate (irate): Shows a strong linear correlation with employment (0.94), suggesting potential multicollinearity. Needs careful handling.
+
+Employment: Strongly linearly correlated with interest rate. Could be predictive if employment status affects purchasing ability.
+
+Purchase: The target variable (0 = no purchase, 1 = purchase), influenced by multiple predictors.
+
+```{r}
+## Age distribution
+ggplot(df, aes(x = age)) +
+  geom_histogram(binwidth = 5, fill = "blue", alpha = 0.7) +
+  theme_minimal() +
+  ggtitle("Age Distribution of Customers")
+
+```
+
+The histogram of age distribution shows a right-skewed distribution, with the majority of customers falling between 25 and 50 years old. The skewness suggests that there are fewer older customers, with some extending beyond 75 years. This distribution may indicate that younger and middle-aged customers are the primary target demographic for the marketing campaign.
+
+```{r}
+# Bar chart showing purchase rate by phone subscription
+ggplot(df, aes(x = phone, fill = purchase)) +
+  geom_bar(position = "fill") +
+  theme_minimal() +
+  labs(title = "Purchase Rate by Phone Subscription", y = "Proportion") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+The bar chart displays the proportion of purchases based on the type of phone subscription (landline vs. cellular). The chart reveals a significant difference in purchase behavior between the two groups. Customers contacted via cellular phones have a noticeably higher purchase rate (represented by the blue portion) compared to those contacted via landlines, where the purchase rate is much lower. This suggests that marketing efforts might be more effective when targeting customers through cellular phone communication rather than landlines.
+
+```{r}
+# Boxplot for years of education
+ggplot(df, aes(y = edu_years)) +
+  geom_boxplot() +
+  theme_minimal() +
+  ggtitle("Boxplot of Education Years")
+```
+
+The boxplot for education years (edu_years) highlights a central tendency around 12 years, which corresponds to high school education. Most individuals have either 12 or 16 years of education, corresponding to high school and university degrees. The lower whisker extends towards minimal education, but outliers are sparse, indicating a relatively structured distribution. The warning is due to the 466 missing values so some data points were removed due to missing values, which needs to be addressed through imputation or classification as "unknown" later. The distribution suggests that higher education may have a role in influencing purchase decisions, but further analysis is required.
+
+```{r}
+# Boxplot of age by purchase
+ggplot(df, aes(x = purchase, y = age)) +
+  geom_boxplot() +
+  theme_minimal() +
+  ggtitle("Age Distribution by Purchase")
+```
+
+The median age of customers who made a purchase is slightly higher than those who did not. However, both groups exhibit a similar spread, with several outliers in the older age range. This suggests that age may not be a strong distinguishing factor for purchase behavior.
+
+
+```{r}
+# Density plot of interest rates
+df <- df %>% mutate(purchase = as.factor(purchase))
+
+ggplot(df, aes(x = irate, fill = purchase)) +
+  geom_density(alpha = 0.5) +
+  theme_minimal() +
+  ggtitle("Density Plot of Interest Rates by Purchase")
+
+```
+
+The Density Plot of Interest Rates by Purchase provides key insights into the relationship between short-term interest rates (irate) and customers' purchasing behavior. The plot shows a bimodal distribution, meaning that purchases tend to cluster around two distinct interest rate ranges.
+
+Low Interest Rates (~1%): The density of customers who purchased the product (blue) is higher in this range. This suggests that lower interest rates encourage more purchases, likely due to increased affordability or better financing options.
+
+High Interest Rates (~5%): There is another peak where a significant number of non-purchasers (red) dominate the market. While some customers still make purchases, the density is lower compared to non-purchasers, suggesting that high interest rates deter purchasing behavior.
+
+Mid-Range Interest Rates (2% - 4%): There is a drop in purchases within this range. This gap indicates that customers might either wait for lower rates or be hesitant due to economic uncertainty.
+
+```{r}
+# Purchase rate by month
+ggplot(df, aes(x = month, fill = purchase)) +
+  geom_bar(position = "fill") +
+  theme_minimal() +
+  labs(title = "Purchase Rate by Month", y = "Proportion") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Purchase rate by weekday
+ggplot(df, aes(x = weekday, fill = purchase)) +
+  geom_bar(position = "fill") +
+  theme_minimal() +
+  labs(title = "Purchase Rate by Weekday", y = "Proportion") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Purchase Rate by Month (Stacked Bar Chart): Significant variation in purchase rates exists across months. Certain months, such as December and September, show a much higher proportion of purchases, suggesting seasonality effects in customer behavior.
+
+Purchase Rate by Weekday (Stacked Bar Chart): The purchase rate remains fairly consistent across weekdays, indicating that the day of the week has little impact on whether a customer makes a purchase.
+
+```{r}
+# Scatter plot of numerical variables vs. purchase
+ggplot(df, aes(x = age, y = edu_years, color = purchase)) +
+  geom_point(alpha = 0.5) +
+  labs(title = "Age vs Education Years by Purchase") +
+  theme_minimal()
+```
+
+Customers who made a purchase tend to be distributed across different education levels, with clustering at common education milestones (e.g., 12 and 16 years). This suggests that education level might have some influence on purchase decisions, though age itself does not show a clear pattern. The warning is due to the 466 missing values so some data points were removed due to missing values, which needs to be addressed through imputation or classification as "unknown" later.
+
+```{r}
+# Correlation matrix
+numeric_vars <- df %>% select(age, edu_years, CPI, CCI, irate, employment)
+corr_matrix <- cor(numeric_vars, use = "pairwise.complete.obs")
+ggcorrplot(corr_matrix, method = "circle", type = "lower", lab = TRUE)
+```
+
+Age and edu_years: Slight negative linear correlation (-0.24) suggests older individuals may have fewer years of formal education.
+
+CPI and irate: Moderate positive linear correlation (0.58) suggests inflation influences interest rates.
+
+Employment and irate: High linear correlation (0.94) indicates strong interdependence, which may cause multicollinearity.
+
+*****
+
+## Task 2 (20 points)
+
+Consider the education variable, `edu_years`, which was 
+derived from a categorical variable using the following table:
+
+| Category                 | Numeric Value |
+|--------------------------|---------------|
+| basic.4y                 |     4         |
+| basic.6y                 |     6         |
+| basic.9y                 |     9         |
+| High School              |    12         |
+| Illiterate               |     1         |
+| Professional Course      |    13         |
+| University degree        |    16         |
+
+Justify the use of a numerical variable instead of a categorical
+variable and discuss the implications of that choice when 
+building a generalized linear model.
+
+*****
+The edu_years variable was derived from a categorical education level and transformed into a numerical representation. This choice is justified based on the following reasons: Education levels have a natural ordering, where higher values represent more years of education. Treating this variable as numerical allows us to preserve this ranking and interpret it meaningfully in the model. Secondly, by using a numerical variable, we can model a potential linear relationship between education and the likelihood of purchase. If customers with more education are more (or less) likely to purchase, a generalized linear model (GLM) can capture that trend efficiently. Moreover, if edu_years were treated as a categorical variable, it would require multiple dummy variables (one for each category), increasing the number of model parameters. This could lead to overfitting and make interpretation more difficult.
+
+A numerical version of education years allows us to quantify its effect directly. For example, a model coefficient for edu_years can be interpreted as:"For each additional year of education, the likelihood of purchase increases/decreases by X%."
+This is more intuitive than comparing multiple categorical dummy variables.
+
+Implications for Generalized Linear Modeling
+Assumption of Linearity: GLMs often assume that the predictor variables have a linear relationship with the response variable (on the link function scale). If the effect of education is non-linear, using a numeric variable may oversimplify the relationship. A transformation (e.g., quadratic term) or binning into meaningful groups may be needed.
+
+If certain education levels have significantly different purchase behaviors (e.g., professional course graduates vs. university graduates), treating it as continuous might obscure these differences. This can be tested by checking residuals or using categorical encoding if needed.
+
+*****
+
+## Task 3 (20 points)
+
+The data set may contain missing values.
+
+1. Check the missing value proportion for all the variables.
+1. Consider the relationship betIen `purchase` and the 
+   missing values for each variable that has missing values.
+   For each variable that has missing values, create a table 
+   showing the mean response for missing values and the mean
+   response for when the variable has values.
+1. Based on the results of the tables created above determine
+   which of the methods you want to use for each variable.
+   Justify your choices and implement them so no missing values
+   remain.
+   - Remove rows
+   - Remove columns
+   - Convert missing to 'unknown'
+   - Impute the missing value using the mean
+
+*****
+```{r}
+# Check missing value proportion for all variables
+missing_values <- colSums(is.na(df)) / nrow(df) * 100
+missing_values <- as.data.frame(missing_values)
+missing_values <- tibble::rownames_to_column(missing_values, "Variable")
+colnames(missing_values) <- c("Variable", "Missing_Percentage")
+print(missing_values)
+
+# Analyze the relationship between missing values and purchase rate
+missing_analysis <- function(var) {
+  df %>% 
+    mutate(missing = is.na(.data[[var]])) %>%
+    group_by(missing) %>%
+    summarise(mean_purchase = mean(as.numeric(purchase), na.rm = TRUE), 
+              count = n()) %>%
+    mutate(variable = var)
+}
+
+# Identify variables with missing values
+missing_vars <- names(df)[sapply(df, function(x) any(is.na(x)))]
+
+# Generate summary tables
+missing_summary <- map_dfr(missing_vars, missing_analysis)
+print(missing_summary)
+```
+```{r}
+# Remove rows where `job` is missing
+df <- df %>% drop_na(job)
+
+# Convert missing values to 'unknown' for categorical variables
+df <- df %>%
+  mutate(
+    marital = fct_explicit_na(marital, na_level = "unknown"),
+    housing = fct_explicit_na(housing, na_level = "unknown"),
+    loan = fct_explicit_na(loan, na_level = "unknown")
+  )
+
+# Impute missing values for `edu_years` using the mean
+df$edu_years[is.na(df$edu_years)] <- mean(df$edu_years, na.rm = TRUE)
+
+# Verify no missing values remain
+colSums(is.na(df))
+```
+
+Based on the missing value analysis, determined the best approach for handling missing data while preserving data integrity and minimizing bias. For the job variable, which has 0.81% missing values, we chose to remove the affected rows. Since occupation is a key predictor in marketing campaigns, having missing values in this field could introduce bias. Removing only 81 rows out of 10,000 will not significantly impact the dataset, ensuring that our model remains clean and reliable.
+
+For marital, which has only 0.27% missing values, we opted to convert missing values to "unknown". Marital status is a less critical predictor, and the small proportion of missing values means that dropping rows would unnecessarily reduce our dataset. Instead, treating missing values as a separate category allows us to retain more data without compromising analysis.
+
+We chose not to drop the housing column despite its missing values because its overall missing percentage was relatively low (2.29%), and removing an entire column would result in unnecessary loss of potentially useful information. Additionally, when we conducted a Pearson’s chi-square test and a t-test to examine the relationship between housing and purchase, the results showed that the linear correlation was statistically insignificant. This suggests that whether a person has a housing loan does not have a meaningful impact on their likelihood of making a purchase. Given this, we also decided not to impute missing values with the most frequent category or a statistical measure like mode imputation. Since housing was not significantly correlated with the target variable, imputing values might introduce artificial patterns that do not actually exist in the data. Instead, we categorized missing values as "unknown", ensuring that we retain the original structure of the dataset without forcing assumptions that might misrepresent the data.
+
+For the edu_years variable, which has 4.66% missing values, we decided to impute the missing values using the mean. Since this variable is numeric and derived from a structured categorical system, the missing values likely follow a similar distribution. Imputing with the mean rather than the mean helps prevent distortions caused by potential outliers while preserving the meaningful representation of education levels in the dataset.
+
+*****
+
+## Task 4 (20 points)
+
+Investigate correlations between the numeric variables and determine
+which pairs of variables concern you in building a generalized linear
+model.
+Explain why you are concerned about these variables.
+
+*****
+```{r}
+# Investigate correlations between numeric variables
+numeric_vars <- df %>% select(age, edu_years, CPI, CCI, irate, employment)
+corr_matrix <- cor(numeric_vars, use = "pairwise.complete.obs")
+print(corr_matrix)
+
+# Visualize the correlation matrix
+ggcorrplot(corr_matrix, method = "circle", type = "lower", lab = TRUE)
+```
+
+After analyzing the correlation matrix and visualizing relationships between numerical variables, we identified key concerns regarding potential multicollinearity in our generalized linear model. The most significant issue arises from the strong linear correlation (0.94) between irate (interest rate) and employment (number of employees at the company at the time of the call). This suggests that these two variables provide almost identical information, likely due to their economic interdependence—employment levels often rise and fall in response to interest rate changes. Including both in the model could lead to unstable coefficient estimates and reduced interpretability, making it difficult to determine their individual effects on the target variable. To address this, we may consider removing one of these variables or applying dimensionality reduction techniques, such as Principal Component Analysis (PCA), to combine them into a single economic indicator.
+
+Another concern is the moderate linear correlation (0.58) between CPI (Consumer Price Index) and irate, which suggests some overlap between inflation and interest rates. Since inflation often influences monetary policy decisions, keeping both variables might introduce bias in coefficient estimation and distort the true relationship between these predictors and the response variable. Instead of removing one variable immediately, we should compute Variance Inflation Factor (VIF) values to quantify their contribution to multicollinearity. If VIF values indicate redundancy, one of these variables could be excluded or adjusted using transformations, such as taking the difference (CPI - irate).
+
+Other correlations in the dataset appear weaker and are not immediate concerns. The negative linear correlation (-0.24) between age and edu_years suggests that older individuals in the dataset may have fewer years of formal education, but the strength of this relationship is relatively low. Additionally, CPI and CCI (-0.15) and CPI and employment (0.36) exhibit weak to moderate correlations, which do not pose significant risks unless further analysis reveals multicollinearity issues.
+*****
+
+## Task 5 (20 points)
+
+Based on all the work you have done so far, propose a set of candidate
+generalized linear models. Fit these models and create a table showing 
+Akaike's An Information Criterion (AIC) to help you decide which models
+are worth pursuing further.
+
+*****
+
+```{r}
+# Fit Candidate Generalized Linear Models
+model1 <- glm(purchase ~ age + I(age^2) + edu_years + job + marital + housing + loan + phone + month + weekday + CPI + CCI + irate + employment, 
+              data = df, 
+              family = binomial(link = "logit"))
+model2 <- glm(purchase ~ edu_years + job + marital + housing + loan + phone + month + weekday + CPI + CCI + irate+employment, 
+              data = df, 
+              family = binomial(link = "logit"))
+
+model3 <- glm(purchase ~ age + I(age^2) + edu_years + phone + month + weekday  + CCI + employment, 
+              data = df, 
+              family = binomial(link = "logit"))
+
+model4 <- glm(purchase ~ age + I(age^2) + job + loan + phone + month + weekday  + CCI, 
+              data = df, 
+              family = binomial(link = "logit"))
+
+model5 <- glm(purchase ~ age + I(age^2) + edu_years + job +phone+ marital + month + weekday + CPI + CCI + employment, 
+              data = df, 
+              family = binomial(link = "logit"))
+
+model6 <- glm(purchase ~ age + I(age^2) + phone + irate + CPI, 
+              data = df, 
+              family = binomial(link = "logit"))
+
+# Compare AIC scores
+model_comparison <- data.frame(
+  Model = c("Model 1", "Model 2", "Model 3", "Model 4", "Model 5", "Model 6"),
+  AIC = c(AIC(model1), AIC(model2), AIC(model3), AIC(model4), AIC(model5), AIC(model6))
+)
+
+# AIC comparison table
+model_comparison
+```
+
+Model Comparison and Interpretation
+The AIC values from the six models indicate their relative performance, with lower AIC values suggesting a better model fit while balancing complexity.
+
+Model 1 (AIC = 10995.38): This model includes all variables: age (quadratic), education, job, marital status, housing, loan, phone type, month, weekday, CPI, CCI, interest rate, and employment. While comprehensive, its AIC is not the lowest, meaning some variables may be adding unnecessary complexity without improving the model.
+
+Model 2 (AIC = 10996.85): This model removes age while keeping education, job, marital status, housing, loan, phone, time-based factors, CPI, CCI, interest rate, and employment. Its AIC is slightly higher than Model 1, indicating that removing age did not improve fit significantly.
+
+Model 3 (AIC = 10974.06): Includes age (quadratic), education, phone, month, weekday, CCI, and employment. Lowest AIC, meaning it balances predictive accuracy and complexity well. Excludes job, marital status, housing, loan, CPI, and irate, suggesting these factors may not contribute much to purchase likelihood.
+
+Model 4 (AIC = 11876.39): Includes age (quadratic), job, loan, phone, month, weekday, and CCI. Highest AIC, indicating a poor fit. Excludes education, CPI, employment, and interest rate, which may have negatively impacted performance.
+
+Model 5 (AIC = 10991.39): Includes age (quadratic), education, job, phone, marital status, time-based factors, CPI, CCI, and employment. Performs better than Model 1 but slightly worse than Model 3. The inclusion of job and marital status may not add significant value.
+
+Model 6 (AIC = 11472.96): Includes age (quadratic), phone, interest rate, and CPI. Has a relatively high AIC, showing that removing employment and education weakened the model.
+
+Final Recommendation
+Model 3 (AIC = 10974.06) is the best choice.
+It effectively balances key factors (age, education, phone type, CCI, employment) while eliminating unnecessary complexity.
+
+*****
+
+## Task 6 (20 points)
+
+Which model or models should I consider adequate?
+Explain your reasoning.
+
+*****
+```{r}
+model3 <- glm(purchase ~ age + I(age^2) + edu_years + phone + month + weekday  + CCI + employment, 
+              data = df, 
+              family = binomial(link = "logit"))
+summary(model3)
+```
+
+Based on the AIC values and model complexity, Model 3 emerges as the best choice, with Model 5 as somewhat of a close alternative. Model 3 has an AIC of 10974, which is the lowest among all candidate models. A lower AIC indicates that the model effectively explains purchase behavior while avoiding overfitting.Model 3 is simpler than Model 1 and Model 5, which both include job, marital status, and additional predictors that do not significantly improve AIC. Model 3 excludes unnecessary variables (e.g., job, marital status, housing, and irate), which do not significantly improve model performance thus maintaining interpretability by only including variables with strong statistical and business relevance.
+
+The quadratic term for age (I(age²)) is significant (p = 0.000148), confirming a non-linear effect of age on purchase probability.
+Education years (edu_years) is significant (p = 0.002063), suggesting that higher education influences purchasing behavior.
+Phone type (cellular) is highly significant (p < 2e-16), indicating that customers with cellular phones are much more likely to purchase.
+Several months (e.g., June, July, August, October, December, March, April) are significant, showing seasonal effects on purchasing patterns.
+Weekday variables (Tuesday, Wednesday, Thursday, Friday) are significant, suggesting that purchases vary by day of the week.
+CCI (Consumer Confidence Index) is significant (p = 0.000268), meaning economic confidence influences purchase likelihood.
+Employment status (p < 2e-16) is the strongest predictor, suggesting that employment conditions directly impact purchasing decisions.
+
+Residual deviance (10934) is lower than the null deviance (13699), indicating the model significantly improves over a baseline model. The Fisher scoring iterations (4) suggest the model converges well without computational difficulties.
+
+*****
+
+## Task 7 (20 points)
+
+The marketing department thinks that the variable `age` should be
+a significant feature in determining whether a prospective customer
+will make a purchase.
+
+Based on the results of the previous task how would you respond
+to the marketing department's *gut feeling* about the variable `age`?
+
+*****
+Based on the results of the previous analysis, age does play a significant role in predicting purchase behavior, but its relationship is non-linear. In Model 3, both age (p = 0.000138) and its quadratic term I(age²) (p = 0.000148) are statistically significant, indicating that the effect of age is not simply increasing or decreasing—it follows a curved trend.
+
+This suggests that certain age groups are more or less likely to make a purchase, rather than there being a consistent linear relationship. Therefore, while the marketing department’s intuition about age being important is partially correct, they should recognize that the impact of age is more complex than a simple direct effect.
+
+To refine marketing strategies, segmenting customers based on age groups rather than assuming a direct relationship would be more effective.
+*****
+
+## Task 8 (20 points)
+
+Select a single best model and perform a full diagnostic analysis.
+Be sure to explain the strength or weaknesses of this model.
+
+*****
+```{r}
+# Fit the best model (Model 3)
+model3 <- glm(purchase ~ age + I(age^2) + edu_years + phone + month + weekday + CCI + employment, 
+              data = df, 
+              family = binomial(link = "logit"))
+summary(model3)
+anova(model3,test='Chisq')
+```
+
+Model 3 provides insight into the factors influencing purchase behavior. 
+
+Age & Quadratic Term (I(age^2)): age has a negative coefficient (-0.0479, p < 0.001), meaning that as age increases, the probability of purchase decreases. However, I(age^2) has a positive coefficient (0.00053, p < 0.001), indicating a non-linear (quadratic) relationship. This suggests that younger and older individuals may behave differently in terms of purchase likelihood.
+
+Education Years (edu_years): A positive coefficient (0.0201, p = 0.002), meaning that more years of education slightly increase the probability of purchase.
+
+Phone Type (phonecellular):A positive and significant effect (0.4572, p < 0.0001), meaning that customers who use cellular phones are more likely to make a purchase compared to those using landlines.
+
+Month of Contact (month): Several months show significant positive effects on purchase probability:
+          June (1.02), July (0.86), August (0.56), October (0.83), November (0.34), December (1.54), March (1.41), April (0.65), September (0.41)
+This suggests that purchase behavior varies significantly by month, with some months being stronger for sales than others.
+
+Weekday of Contact (weekday): Some weekdays have a positive and significant effect, particularly Tuesday, Wednesday, Thursday, and Friday.
+This may indicate better engagement on these days, which could be useful for marketing timing.
+
+Consumer Confidence Index (CCI): A small positive effect (0.0248, p < 0.001), suggesting that a higher CCI increases purchase likelihood, but the effect size is relatively low.
+
+Employment Level (employment): A negative coefficient (-0.0114, p < 0.0001), meaning higher employment levels reduce the probability of purchase. This could indicate that customers are less likely to respond to marketing efforts when the job market is strong.
+
+Model Performance & Fit
+
+Residual Deviance: 10,934 on 9,989 degrees of freedom.
+
+AIC: 10,974, indicating a reasonably good balance between model complexity and fit.
+
+Likelihood Ratio Test: Significant predictors include age, phone type, month, weekday, CCI, and employment, reinforcing their importance.
+
+Interpretation of Deviance Table
+
+Age (χ² = 14.36, p < 0.001): Supports the marketing department’s belief that age influences purchases.
+
+Quadratic Term (χ² = 395.39, p < 0.0001): Confirms the non-linear relationship of age.
+
+Phone Type (χ² = 436.55, p < 0.0001): Strong impact of using cellular over landline.
+
+Month (χ² = 748.65, p < 0.0001): Significant seasonal effects.
+
+Employment (χ² = 917.46, p < 0.0001): Most impactful variable, showing that employment levels influence purchase likelihood.
+
+```{r}
+# Compute quantile residuals
+quant_resid <- qresid(model3)
+df$residuals <- quant_resid
+
+# Quantile Residuals vs Each Predictor
+predictors <- c("age", "edu_years", "phone", "month", "weekday", "CCI", "employment")
+
+plot_list <- list()
+for (pred in predictors) {
+  p <- ggplot(df, aes_string(x = pred, y = "residuals")) +
+    geom_point(alpha = 0.5) +
+    geom_smooth(method = "loess", se = FALSE, color = "blue") +
+    labs(title = paste("Quantile Residuals vs", pred), x = pred, y = "Quantile Residuals") +
+    theme_minimal()
+  
+  plot_list[[pred]] <- p
+}
+
+do.call(grid.arrange, c(plot_list, ncol = 2))
+```
+
+The quantile residual plots indicate the goodness of fit of the logistic regression model.
+
+Age & edu_years: The residuals appear randomly distributed without a strong trend, suggesting that the quadratic term for age and education years is reasonably modeled.
+
+Phone, weekday, and month: The residuals for categorical variables (phone type, weekdays, and months) do not show substantial deviations, which indicates that these variables do not introduce significant systematic bias.
+
+CCI & employment: The quantile residuals appear evenly spread, meaning that these predictors are likely well incorporated into the model.
+Issues Noticed:
+
+The residuals for employment show a slight clustering around a certain range, which could indicate some model limitations in capturing employment effects on purchases.
+
+No clear trend or structure is observed across predictors, meaning no major violations of model assumptions, though improving readability and checking interactions might help refine insights.
+
+```{r}
+# Fitted Values vs Quantile Residuals
+ggplot(df, aes(x = fitted(model3), y = residuals)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "loess", se = FALSE, color = "blue") +
+  labs(title = "Fitted Values vs Quantile Residuals", x = "Fitted Values", y = "Quantile Residuals") +
+  theme_minimal()
+```
+
+The Fitted Values vs. Quantile Residuals plot assesses the goodness of fit and helps detect any systematic issues in the model. The residuals are spread randomly around zero, and the LOESS (blue) line is relatively flat, suggesting that the model does not exhibit major bias. The residuals appear more dispersed at extreme fitted values (near 0 and 1). This is expected in logistic regression, as probabilities are bounded between 0 and 1, leading to heteroscedasticity. Some observations have extreme residuals (beyond ±2.5), which might indicate influential points that could impact model performance.
+
+```{r}
+# Influential Observations using Cook’s Distance 
+cooks_dist <- cooks.distance(model3)
+
+# Identify potential influential points
+influential_threshold <- 4 / length(cooks_dist)
+influential_points <- which(cooks_dist > influential_threshold)
+
+# Plot Cook's Distance
+ggplot(data = data.frame(index = 1:length(cooks_dist), cooks_dist = cooks_dist), aes(x = index, y = cooks_dist)) +
+  geom_bar(stat = "identity", alpha = 0.5, fill = "red") +
+  geom_hline(yintercept = influential_threshold, linetype = "dashed", color = "blue") +
+  labs(title = "Cook's Distance for Influential Observations", x = "Observation Index", y = "Cook's Distance") +
+  theme_minimal()
+
+df[influential_points, ]
+```
+
+Most observations have very low Cook’s Distance, indicating that no single data point has a disproportionately large impact on the model. A few observations exhibit slightly higher Cook’s Distance, particularly towards the higher indices, suggesting they may be more influential.
+None of the points exceed a typical threshold for high influence (e.g., 0.5 or 1), meaning there is no immediate concern about undue influence from specific cases. The subset of influential observations consists mostly of individuals with "landline" phones and a variety of jobs and marital statuses. However, there is no clear evidence that these specific cases are distorting the model in a meaningful way.
+
+The model appears to perform well, with no major violations of assumptions. Age as a quadratic variable is useful but could potentially be tested with interaction terms if needed. No single observation overly influences the model, suggesting that the conclusions drawn are robust. Some heteroscedasticity is present, but the model does not show serious issues requiring immediate correction.
+
+Strengths:
+
+- The selected model has one of the lowest AIC values (10974), indicating a good balance between model fit and complexity.
+
+- Including age as a quadratic term accounts for potential non-linear relationships, which aligns with business intuition that younger and older individuals may behave differently.
+
+- The quantile residuals appear relatively well-distributed across predictors, suggesting that systematic bias is not a major issue in the model.
+
+- Cook’s Distance plot shows no highly influential outliers, meaning that the model is not dominated by a few data points.
+
+Weaknesses:
+
+- Residual deviance remains high, indicating some unexplained variance.
+
+- Some predictors like employment, CCI, and CPI may be correlated, potentially inflating standard errors and making it harder to interpret 
+individual coefficients.
+
+- No interaction terms, which could further refine the model.
+
+- While the quadratic form improves the model fit, it makes age’s impact less straightforward to interpret compared to a linear relationship.
+
+- The quantile residual plots still show some dispersion, indicating that there may be missing interactions or additional non-linear effects that could improve the model.
+
+*****
+
+## Task 9 (20 points)
+
+Decide whether you will recommend a single best model or
+a multi-model.
+Explain your thought process in deciding.
+
+*****
+After evaluating multiple candidate models using AIC, predictor significance, residual diagnostics, and interpretability, we recommend proceeding with a single best model rather than a multi-model approach.
+
+The selected model has one of the lowest AIC values (10974), indicating a strong trade-off between model fit and complexity. Residual plots suggest no severe systematic bias, meaning the model sufficiently captures the key patterns in the data. Cook’s Distance analysis does not show highly influential observations, reducing concerns about extreme points skewing the model.
+
+A single best model simplifies decision-making for the marketing team by providing clear, actionable insights.
+Predictor selection is intuitive, with meaningful variables. Using a multi-model approach could make it harder to communicate results, as different models might yield slightly different interpretations.
+
+While multi-model approaches (such as averaging or ensemble methods) can sometimes improve predictive accuracy, they come with added complexity and reduced interpretability. The current dataset does not show major overfitting concerns, so a single model is likely effective enough for generalization. A multi-model approach may be justified if competing models had very close AIC values or if different models performed better in different scenarios—but this is not strongly the case here.
+
+The chosen model can still be refined if needed by testing interaction terms (e.g., between economic factors and consumer behavior), investigating collinearity issues (e.g., between employment and CCI).
+
+A single model allows for iteration and improvement while maintaining clarity.
+
+*****
+
+## Task 10 (20 points)
+
+Write a brief executive summary that compiles the most relevant
+pieces, from the tasks above, for the marketing department.
+Your summary should include a problem statement, discussion of the
+data, a coherent explanation and justification of your recommended
+model, and conclusions. 
+
+*****
+
+Executive Summary
+
+Problem Statement
+
+Artemis LLC’s marketing department seeks to optimize its future campaigns by understanding which factors influence a customer’s likelihood of making a purchase. The company conducted a marketing campaign where prospective customers were contacted, and various data points—including demographic, financial, and economic indicators—were collected. Our objective was to analyze this data and build a generalized linear model (GLM) that provides actionable insights into improving campaign effectiveness.
+
+Data Overview
+
+The dataset consists of 10000 observations with 14 variables. Of those, there are 9,919 complete observations, with missing data present in categorical variables such as job (81 missing values), marital status (27), housing (229), loan (67), and education years (466). The mean purchase rate is relatively consistent across missing and non-missing cases, suggesting that missing values are unlikely to introduce significant bias but should be handled carefully. Economic indicators, such as Consumer Confidence Index (CCI) and employment levels, exhibit notable variation, which plays a role in purchasing behavior. Key variables include age, education years, phone type (cellular vs. landline), month and weekday of contact, Consumer Confidence Index (CCI), and employment rate.
+
+Age: Customers range from 17 to 98 years old, with a mean of 40.37 years.
+
+Education: Customers have between 1 to 16 years of education (mean: 11.93 years).
+
+Phone Type: Cellular users had a higher purchase rate compared to landline users.
+
+Timing Effects: Purchase likelihood varies across months and weekdays, with peaks in March, October, and December.
+
+CCI & Employment: Higher CCI (indicating economic optimism) correlates with increased purchases, while higher employment rates negatively correlate with purchases, likely due to reduced available time for engagement.
+
+Model Selection and Justification:
+
+Six candidate Generalized Linear Models (GLMs) were evaluated using Akaike Information Criterion (AIC) to balance complexity and predictive power.
+
+Model	          Features Included	                                                                          AIC
+
+Model 1         Full model with all variables	                                                              10,995.38
+
+Model 2	        Excludes age, includes economic indicators	                                                10,996.85
+
+Model 3	        Age (quadratic), education, phone, marketing touchpoints, CCI, employment	                  10,974.06 (Best AIC)
+
+Model 4	        Age, job, loan, phone, marketing touchpoints, CCI	                                          11,876.39
+
+Model 5	        Age, education, job, phone, marital status, marketing touchpoints, economic indicators	    10,991.39
+
+Model 6	        Age, phone, interest rate, CPI	                                                            11,472.96
+
+
+After testing six logistic regression models, Model 3 emerged as the best option based on its lowest Akaike Information Criterion (AIC = 10,974), indicating a superior balance between predictive accuracy and complexity.
+
+Final Model Predictors:
+
+Age & Age²: A non-linear effect, suggesting that both younger and older customers are less likely to purchase compared to middle-aged customers.
+
+Education Years: Each additional year of education increases the odds of purchase by 2.0% (p = 0.002).
+
+Phone Type: Cellular users are 57.9% more likely to purchase than landline users (p < 0.001).
+
+Timing Factors: Customers contacted in March, October, and December are significantly more likely to purchase (p < 0.001).
+
+CCI: A one-unit increase in CCI leads to a 2.5% increase raises log-odds by β3=0.0248.
+
+Employment Rate:Each 1-unit increase in employment decreases log-odds by β4=−0.0115.Higher employment rates negatively impact purchases, suggesting less availability to engage.
+
+The selected model demonstrates several strengths, making it a valuable tool for predicting customer purchases. With a low AIC and statistically significant predictors, the model provides a strong predictive framework that effectively balances accuracy and complexity. Additionally, it aligns well with marketing goals, particularly in terms of timing and customer targeting, ensuring that outreach efforts are data-driven and strategic. The model is also practical to implement, as it remains simple, interpretable, and actionable for decision-makers. However, some weaknesses exist. Residual plots indicate heteroskedasticity, suggesting that certain interactions might be missing from the model. Furthermore, while Cook’s Distance identified influential observations, they do not appear to be extreme outliers, meaning their impact on the model is relatively minor.
+
+To optimize marketing efforts, the strategy should focus on middle-aged customers (35-55 years old), as they exhibit a higher likelihood of making a purchase. Outreach should prioritize cellular phone users, as they demonstrate greater engagement compared to landline users. Additionally, marketing campaigns should be aligned with periods of economic optimism, particularly when Consumer Confidence Index (CCI) spikes, to maximize effectiveness. March, October, and December emerge as key months for engagement, making them ideal for targeted promotions. Finally, since employed individuals tend to have lower purchase rates, alternative engagement strategies, such as evening or weekend campaigns, should be considered to better capture this segment.
+
+In conclusion, this model provides valuable insights for refining marketing strategies. The findings suggest prioritizing middle-aged customers, leveraging cellular outreach, and timing campaigns around periods of high engagement (March, October, December). Given the influence of economic sentiment, marketing efforts should also align with rising CCI trends to maximize conversions. While the model performs well, further refinements could explore additional interaction effects and non-linear relationships to further enhance predictive power.
+*****
+
